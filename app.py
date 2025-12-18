@@ -137,13 +137,12 @@ global_bmi = df['BMI'].mean()
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.markdown("Analytics Hub")
+    st.markdown("## 🏥 Analytics Hub")
     st.markdown("---")
     
-    st.markdown("Filters")
+    st.markdown("#### 🎯 Cohort Filters")
     age_range = st.slider("Age Range", 18, 90, (20, 65))
     
-    # Note: Column names are now cleaner
     family_hist = st.multiselect(
         "Family History", 
         options=df['Family History'].unique(),
@@ -169,7 +168,7 @@ filtered_df = df[
 # --- MAIN DASHBOARD ---
 
 st.title("Hypertension Risk Intelligence")
-st.markdown('<div class="subtitle-badge">v2.1 • Live Clinical Dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle-badge">v2.2 • Live Clinical Dashboard</div>', unsafe_allow_html=True)
 
 # 1. KPI CARDS
 col1, col2, col3, col4 = st.columns(4)
@@ -202,7 +201,6 @@ custom_colors = {'Yes': '#FF4B4B', 'No': '#00F5D4'}
 
 with c_left:
     st.subheader("📈 Multifactorial Risk Analysis")
-    # Notice we use the clean column names now
     fig_scatter = px.scatter(
         filtered_df,
         x="BMI",
@@ -217,10 +215,11 @@ with c_left:
     fig_scatter.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(240,242,246,0.5)",
-        legend=dict(orientation="h", y=1.025),
+        legend=dict(orientation="h", y=1.1),
         margin=dict(l=0, r=0, t=30, b=0)
     )
-    st.plotly_chart(fig_scatter, use_container_width=True)
+    # FIX 1: Replaced use_container_width=True with width="stretch"
+    st.plotly_chart(fig_scatter, width="stretch")
 
 with c_right:
     st.subheader("🩺 Diagnosis Split")
@@ -244,7 +243,8 @@ with c_right:
         height=300,
         annotations=[dict(text=f"{current_risk:.0f}%<br>Risk", x=0.5, y=0.5, font_size=20, showarrow=False)]
     )
-    st.plotly_chart(fig_pie, use_container_width=True)
+    # FIX 2: Replaced use_container_width=True with width="stretch"
+    st.plotly_chart(fig_pie, width="stretch")
 
 # 3. DEEP DIVE TABS
 st.markdown("### 🔬 Deep Dive Analytics")
@@ -263,7 +263,8 @@ with tab1:
             color_discrete_map=custom_colors,
         )
         fig_violin.update_layout(height=400, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(240,242,246,0.5)")
-        st.plotly_chart(fig_violin, use_container_width=True)
+        # FIX 3: Replaced use_container_width=True with width="stretch"
+        st.plotly_chart(fig_violin, width="stretch")
     
     with col_stats:
         st.info("💡 **Observation:** High stress combined with smoking significantly correlates with hypertension cases (Red distribution).")
@@ -280,17 +281,17 @@ with tab2:
     )
     fig_hist.update_layout(height=400, paper_bgcolor="rgba(0,0,0,0)")
     fig_hist.update_traces(opacity=0.75)
-    st.plotly_chart(fig_hist, use_container_width=True)
+    # FIX 4: Replaced use_container_width=True with width="stretch"
+    st.plotly_chart(fig_hist, width="stretch")
 
 with tab3:
-    # 1. Create a clean DataFrame for the counts
+    # 1. Create a clean DataFrame for the counts to avoid the ValueError
     med_counts_df = filtered_df['Medication'].value_counts().reset_index()
     med_counts_df.columns = ['Medication', 'Count'] # Rename columns explicitly
     med_counts_df = med_counts_df.head(10) # Keep top 10
 
-    # 2. Plot using the new DataFrame (Fixes the error)
     fig_bar = px.bar(
-        med_counts_df,          # <--- Passing the DataFrame resolves the ambiguity
+        med_counts_df,
         x='Count',
         y='Medication',
         orientation='h',
@@ -307,10 +308,11 @@ with tab3:
         plot_bgcolor="rgba(240,242,246,0.5)",
         coloraxis_showscale=False
     )
-    st.plotly_chart(fig_bar, use_container_width=True)
+    # FIX 5: Replaced use_container_width=True with width="stretch"
+    st.plotly_chart(fig_bar, width="stretch")
+
 # --- FOOTER ---
 st.markdown("---")
 with st.expander("📂 View Raw Data Source"):
-    # The dataframe here will now have clean column names too
     st.dataframe(filtered_df.style.background_gradient(cmap="Purples", subset=["Age", "BMI", "Stress Score"]))
     st.caption("Data Source: Medical Hypertension Research Dataset (2024)")
