@@ -182,7 +182,7 @@ with c_left:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         # FIX: Moved Legend to Bottom (-0.2) so it doesn't get pushed off screen
-        legend=dict(orientation="h", y=-0.2, x=0),
+        legend=dict(orientation="h", y=-0.1, x=0),
         margin=dict(l=0, r=0, t=30, b=0),
         xaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)'),
         yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
@@ -207,7 +207,7 @@ with c_right:
     fig_pie.update_layout(
         showlegend=True,
         # FIX: Moved Legend to Bottom
-        legend=dict(orientation="h", y=-0.2),
+        legend=dict(orientation="h", y=-0.1),
         margin=dict(l=20, r=20, t=20, b=20),
         height=300,
         paper_bgcolor="rgba(0,0,0,0)",
@@ -236,7 +236,7 @@ with tab1:
             paper_bgcolor="rgba(0,0,0,0)", 
             plot_bgcolor="rgba(0,0,0,0)",
             # FIX: Legend at bottom
-            legend=dict(orientation="h", y=-0.2, x=0),
+            legend=dict(orientation="h", y=-0.1, x=0),
             yaxis=dict(gridcolor='rgba(128,128,128,0.2)')
         )
         st.plotly_chart(fig_violin, width="stretch")
@@ -259,7 +259,7 @@ with tab2:
         paper_bgcolor="rgba(0,0,0,0)", 
         plot_bgcolor="rgba(0,0,0,0)",
         # FIX: Legend at bottom
-        legend=dict(orientation="h", y=-0.2, x=0),
+        legend=dict(orientation="h", y=-0.1, x=0),
         yaxis=dict(gridcolor='rgba(128,128,128,0.2)')
     )
     fig_hist.update_traces(opacity=0.75)
