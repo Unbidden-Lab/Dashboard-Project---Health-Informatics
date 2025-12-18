@@ -24,10 +24,7 @@ st.markdown("""
     .stPlotlyChart,
     div[data-testid="stExpander"] {
         background-color: var(--secondary-background-color);
-        
-        /* FIX: Using a semi-transparent grey border ensures visibility in BOTH Dark and Light modes */
         border: 1px solid rgba(128, 128, 128, 0.2);
-        
         border-radius: 15px;
         padding: 15px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -52,7 +49,7 @@ st.markdown("""
         font-size: 0.85rem;
         font-weight: 600;
         margin-bottom: 1rem;
-        border: 1px solid rgba(128, 128, 128, 0.2); /* Added border here too */
+        border: 1px solid rgba(128, 128, 128, 0.2);
     }
     
     /* Tabs Styling */
@@ -62,7 +59,7 @@ st.markdown("""
     
     .stTabs [data-baseweb="tab"] {
         background-color: var(--secondary-background-color);
-        border: 1px solid rgba(128, 128, 128, 0.2); /* Added border here too */
+        border: 1px solid rgba(128, 128, 128, 0.2);
         border-radius: 8px;
         padding: 10px 20px;
         font-weight: 600;
@@ -73,7 +70,6 @@ st.markdown("""
         color: white !important;
         border: none;
     }
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -83,7 +79,7 @@ def load_data():
     df = pd.read_csv('hypertension_dataset.csv')
     df['Medication'] = df['Medication'].fillna('None')
     
-    # RENAME COLUMNS to remove underscores
+    # RENAME COLUMNS
     df.rename(columns={
         'Has_Hypertension': 'Hypertension',
         'Smoking_Status': 'Smoking Status',
@@ -94,6 +90,10 @@ def load_data():
         'Exercise_Level': 'Activity Level',
         'Family_History': 'Family History'
     }, inplace=True)
+    
+    # FIX: Move 'Hypertension' (Target) to the FIRST column so it's never hidden
+    cols = ['Hypertension'] + [c for c in df.columns if c != 'Hypertension']
+    df = df[cols]
     
     return df
 
@@ -136,7 +136,7 @@ filtered_df = df[
 # --- MAIN DASHBOARD ---
 
 st.title("Hypertension Risk Intelligence")
-st.markdown('<div class="subtitle-badge">v2.4 • Live Clinical Dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle-badge">v2.5 • Live Clinical Dashboard</div>', unsafe_allow_html=True)
 
 # 1. KPI CARDS
 col1, col2, col3, col4 = st.columns(4)
@@ -163,8 +163,6 @@ st.markdown("---")
 
 # 2. MAIN ANALYTICS ROW
 c_left, c_right = st.columns([2.5, 1])
-
-# Colors
 custom_colors = {'Yes': '#FF4B4B', 'No': '#00C9A7'} 
 
 with c_left:
@@ -180,11 +178,11 @@ with c_left:
         opacity=0.8,
         title="Impact of BMI & Salt on Hypertension (Size = Stress)"
     )
-    # UPDATED: Transparent background + Grid lines
     fig_scatter.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        legend=dict(orientation="h", y=1),
+        # FIX: Moved Legend to Bottom (-0.2) so it doesn't get pushed off screen
+        legend=dict(orientation="h", y=-0.2, x=0),
         margin=dict(l=0, r=0, t=30, b=0),
         xaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)'),
         yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
@@ -208,7 +206,8 @@ with c_right:
     
     fig_pie.update_layout(
         showlegend=True,
-        legend=dict(orientation="h", y=-0.1),
+        # FIX: Moved Legend to Bottom
+        legend=dict(orientation="h", y=-0.2),
         margin=dict(l=20, r=20, t=20, b=20),
         height=300,
         paper_bgcolor="rgba(0,0,0,0)",
@@ -236,6 +235,8 @@ with tab1:
             height=400, 
             paper_bgcolor="rgba(0,0,0,0)", 
             plot_bgcolor="rgba(0,0,0,0)",
+            # FIX: Legend at bottom
+            legend=dict(orientation="h", y=-0.2, x=0),
             yaxis=dict(gridcolor='rgba(128,128,128,0.2)')
         )
         st.plotly_chart(fig_violin, width="stretch")
@@ -257,6 +258,8 @@ with tab2:
         height=400, 
         paper_bgcolor="rgba(0,0,0,0)", 
         plot_bgcolor="rgba(0,0,0,0)",
+        # FIX: Legend at bottom
+        legend=dict(orientation="h", y=-0.2, x=0),
         yaxis=dict(gridcolor='rgba(128,128,128,0.2)')
     )
     fig_hist.update_traces(opacity=0.75)
@@ -291,5 +294,6 @@ with tab3:
 # --- FOOTER ---
 st.markdown("---")
 with st.expander("📂 View Raw Data Source"):
+    # This table will now have Hypertension as the FIRST column
     st.dataframe(filtered_df.style.background_gradient(cmap="Purples", subset=["Age", "BMI", "Stress Score"]))
     st.caption("Data Source: Medical Hypertension Research Dataset (2024)")
