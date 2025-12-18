@@ -338,8 +338,18 @@ with tab4:
             )
             st.plotly_chart(fig_corr, width="stretch")
 
-# FOOTER
+# --- FOOTER ---
 st.markdown("---")
 with st.expander("📂 View Raw Data Source"):
     st.dataframe(filtered_df.style.background_gradient(cmap="Purples", subset=["Age", "BMI", "Stress Score"]))
-    st.caption("Data Source: Medical Hypertension Research Dataset (2024)")
+    
+    # UPDATED CITATION
+    st.markdown("""
+    <small>
+        <b>Data Citation:</b> 
+        <a href="https://www.kaggle.com/datasets/miadul/hypertension-risk-prediction-dataset" target="_blank">
+            Hypertension Risk Prediction Dataset
+        </a> 
+        by Miadul (Kaggle). Accessed December 2025.
+    </small>
+    """, unsafe_allow_html=True)
