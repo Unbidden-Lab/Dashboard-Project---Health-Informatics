@@ -184,7 +184,7 @@ with c_left:
     fig_scatter.update_layout(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        legend=dict(orientation="h", y=1.1),
+        legend=dict(orientation="h", y=1),
         margin=dict(l=0, r=0, t=30, b=0),
         xaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)'),
         yaxis=dict(showgrid=True, gridcolor='rgba(128,128,128,0.2)')
