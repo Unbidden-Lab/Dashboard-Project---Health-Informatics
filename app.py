@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- THEME-AWARE CUSTOM CSS ---
+# --- CUSTOM CSS THAT AUTO-ADJUSTS TO USER THEME ---
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
@@ -88,7 +88,7 @@ def load_data():
         'Family_History': 'Family History'
     }, inplace=True)
     
-    # --- SMART IMPUTATION: OCCUPATION ---
+    # --- SMART IMPUTATION FOR OCCUPATION---
     def assign_occupation(row):
         age = row['Age']
         stress = row['Stress Score']
@@ -135,13 +135,12 @@ with st.sidebar:
     # 3. Family History Filter
     family_hist = st.multiselect("Family History", options=df['Family History'].unique(), default=df['Family History'].unique())
     
-    # 4. Activity Level Filter (RESTORED!)
+    # 4. Activity Level Filter 
     exercise_filter = st.multiselect("Activity Level", options=df['Activity Level'].unique(), default=df['Activity Level'].unique())
     
     st.markdown("---")
     st.caption("Developed for Health Informatics (ITE3)")
 
-# Apply All 4 Filters
 filtered_df = df[
     (df['Age'].between(age_range[0], age_range[1])) &
     (df['Family History'].isin(family_hist)) &
@@ -285,7 +284,7 @@ with tab3:
     )
     st.plotly_chart(fig_bar, width="stretch")
 
-# --- CORRELATION LAB (Tab 4) ---
+# --- CORRELATION LAB  ---
 with tab4:
     st.markdown("##### 🕵️ Data Detective: Pinpoint Correlations")
     
@@ -343,7 +342,6 @@ st.markdown("---")
 with st.expander("📂 View Raw Data Source"):
     st.dataframe(filtered_df.style.background_gradient(cmap="Purples", subset=["Age", "BMI", "Stress Score"]))
     
-    # UPDATED CITATION
     st.markdown("""
     <small>
         <b>Data Citation:</b> 
