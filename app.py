@@ -17,7 +17,7 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
     * { font-family: 'Inter', sans-serif; }
     
-    div[data-testid="stMetric"], .stPlotlyChart, div[data-testid="stExpander"], .story-box {
+    div[data-testid="stMetric"], .stPlotlyChart, div[data-testid="stExpander"], .story-box, .corr-card {
         background-color: var(--secondary-background-color);
         border: 1px solid rgba(128, 128, 128, 0.2);
         border-radius: 15px;
@@ -28,6 +28,11 @@ st.markdown("""
     .story-box {
         border-left: 5px solid #764ba2;
         margin-bottom: 20px;
+    }
+    
+    .corr-card {
+        border-left: 5px solid #FF4B4B;
+        margin-bottom: 10px;
     }
     
     h1 {
@@ -124,12 +129,12 @@ filtered_df = df[
 
 # --- MAIN DASHBOARD ---
 st.title("Hypertension Risk Intelligence")
-st.markdown('<div class="subtitle-badge">v3.0 • Narrative Analytics Dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle-badge">v4.1 • Final Narrative Dashboard</div>', unsafe_allow_html=True)
 
 # --- DYNAMIC STORY ENGINE ---
 total_p = len(filtered_df)
 
-# FIX: Initialize variables with defaults to prevent crashes if total_p is 0
+# Defaults
 current_risk = 0
 risk_delta = 0
 avg_bmi = 0
@@ -145,18 +150,16 @@ if total_p > 0:
     bmi_delta = avg_bmi - global_bmi
     avg_sleep = filtered_df['Sleep Duration'].mean()
     
-    # Determine the dominant demographic in the filter
     dom_stage = filtered_df['Life Stage'].mode()[0] if not filtered_df.empty else "Mixed"
     avg_stress = filtered_df['Stress Score'].mean()
     stress_desc = "High" if avg_stress > 6 else "Moderate" if avg_stress > 4 else "Low"
     
-    # Construct the Narrative
     story_text = f"""
     <b>Cohort Analysis:</b> You are currently viewing a group of <b>{total_p}</b> patients, predominantly in the <b>{dom_stage}</b> category. 
     The hypertension risk in this group is <b>{current_risk:.1f}%</b>, which is <span style='color: {'#FF4B4B' if risk_delta > 0 else '#00C9A7'}'>
     <b>{'higher' if risk_delta > 0 else 'lower'} than the global average</b></span> by {abs(risk_delta):.1f}%. 
     <br>This cohort exhibits <b>{stress_desc}</b> average stress levels. 
-    <i>(Use the charts below to explore how lifestyle factors like Salt Intake and BMI drive this trend.)</i>
+    <i>(Use the Correlation Lab to pinpoint specific drivers.)</i>
     """
 else:
     story_text = "No patients match the current filters. Please adjust your selection."
@@ -165,7 +168,6 @@ st.markdown(f'<div class="story-box">{story_text}</div>', unsafe_allow_html=True
 
 # KPI CARDS
 col1, col2, col3, col4 = st.columns(4)
-
 with col1: st.metric("👥 Total Cohort", f"{total_p:,}", "Records Selected")
 with col2: st.metric("⚠️ HTN Prevalence", f"{current_risk:.1f}%", f"{risk_delta:+.1f}% vs Global", delta_color="inverse")
 with col3: st.metric("📊 Mean BMI", f"{avg_bmi:.1f}", f"{bmi_delta:+.1f} vs Global", delta_color="inverse")
@@ -173,7 +175,7 @@ with col4: st.metric("😴 Avg Sleep", f"{avg_sleep:.1f}h", "Target: 7-9h")
 
 st.markdown("---")
 
-# MAIN CHARTS
+# --- CHARTS AREA ---
 c_left, c_right = st.columns([2.5, 1])
 custom_colors = {'Yes': '#FF4B4B', 'No': '#00C9A7'} 
 
@@ -208,9 +210,9 @@ with c_right:
     )
     st.plotly_chart(fig_pie, width="stretch")
 
-# DEEP DIVE TABS
+# --- TABS: ADDED CORRELATION LAB ---
 st.markdown("### 🔬 Deep Dive Analytics")
-tab1, tab2, tab3 = st.tabs(["📊 Life Stage (The 'When')", "🚬 Behavioral (The 'Where')", "💊 Treatments"])
+tab1, tab2, tab3, tab4 = st.tabs(["📊 Life Stage", "🚬 Behavioral", "💊 Treatments", "🔗 Correlation Lab"])
 
 with tab1:
     col_graph, col_stats = st.columns([3, 1])
@@ -220,10 +222,9 @@ with tab1:
         if 'Yes' in stage_risk.columns:
             stage_risk['Risk Score'] = stage_risk['Yes'] * 100 
             stage_risk = stage_risk.sort_values('Risk Score', ascending=False)
-            
             fig_occ = px.bar(
                 stage_risk, x='Risk Score', y='Life Stage', orientation='h',
-                title="Hypertension Risk by Life Stage (When does risk spike?)", color='Risk Score',
+                title="Hypertension Risk by Life Stage", color='Risk Score',
                 color_continuous_scale='Reds', text_auto='.1f'
             )
             fig_occ.update_layout(
@@ -233,9 +234,6 @@ with tab1:
                 coloraxis_showscale=False
             )
             st.plotly_chart(fig_occ, width="stretch")
-        else:
-            st.warning("Not enough data to calculate risk per life stage.")
-            
     with col_stats:
         st.info("💡 **Temporal Insight:** This chart answers the 'WHEN'. It tracks how risk accumulates as the patient moves through different stages of life.")
 
@@ -243,7 +241,7 @@ with tab2:
     fig_violin = px.violin(
         filtered_df, y="Stress Score", x="Smoking Status", color="Hypertension",
         box=True, points="all", color_discrete_map=custom_colors,
-        title="Distribution of Stress & Smoking (Where does risk hide?)"
+        title="Distribution of Stress & Smoking"
     )
     fig_violin.update_layout(
         height=400, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
@@ -265,6 +263,84 @@ with tab3:
         coloraxis_showscale=False, xaxis=dict(gridcolor='rgba(128,128,128,0.2)')
     )
     st.plotly_chart(fig_bar, width="stretch")
+
+# --- NEW: CORRELATION LAB (Tab 4) ---
+with tab4:
+    st.markdown("##### 🕵️ Data Detective: Pinpoint Correlations")
+    
+    # 1. Prepare Data for Correlation (Convert Categories to Codes)
+    corr_df = filtered_df.copy()
+    
+    # Simple encoding for correlation matrix
+    for col in corr_df.select_dtypes(include=['object']).columns:
+        corr_df[col] = corr_df[col].astype('category').cat.codes
+        
+    # Calculate Correlation Matrix
+    corr_matrix = corr_df.corr().round(2)
+    
+    # 2. Extract Top Correlations (Absolute value > 0.1 to show relevant ones)
+    c = corr_matrix.abs()
+    s = c.unstack()
+    so = s.sort_values(kind="quicksort", ascending=False)
+    so = so[so < 1.0] # Remove self correlation
+    so = so[so > 0.1] # Threshold
+    
+    unique_pairs = []
+    seen = set()
+    for index, val in so.items():
+        pair = sorted([index[0], index[1]])
+        pair_str = f"{pair[0]} ↔ {pair[1]}"
+        if pair_str not in seen:
+            seen.add(pair_str)
+            unique_pairs.append((f"{pair[0]} & {pair[1]} ({val:.2f})", pair[0], pair[1], val))
+    
+    # 3. INTERACTIVE SECTION
+    col_sel, col_viz = st.columns([1, 2])
+    
+    with col_sel:
+        st.write("We pinpointed these significant relationships in your filtered data:")
+        
+        options = [x[0] for x in unique_pairs]
+        if options:
+            selected_option = st.selectbox("Select a Correlation to Explore:", options)
+            sel_data = next(x for x in unique_pairs if x[0] == selected_option)
+            col_x, col_y, corr_val = sel_data[1], sel_data[2], sel_data[3]
+            
+            st.markdown(f"""
+            <div class="corr-card">
+                <h3>{corr_val}</h3>
+                <p>Correlation Coefficient</p>
+                <small>Indicates a strong relationship between <b>{col_x}</b> and <b>{col_y}</b>.</small>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        else:
+            st.info("No strong correlations found in this specific subset.")
+            col_x, col_y = "Age", "BMI" 
+            
+    with col_viz:
+        if options:
+            # FIX: Use numeric 'corr_df' for the scatter plot to enable trendline calculations
+            # But re-attach the original label for the colors
+            corr_df['Hypertension Label'] = filtered_df['Hypertension'].reset_index(drop=True)
+            
+            fig_corr = px.scatter(
+                corr_df, 
+                x=col_x, 
+                y=col_y, 
+                color="Hypertension Label", # Use string for color legend
+                trendline="ols", 
+                title=f"Direct Comparison: {col_x} vs {col_y}",
+                color_discrete_map={'Yes': '#FF4B4B', 'No': '#00C9A7'}, 
+                opacity=0.7
+            )
+            fig_corr.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                height=350,
+                xaxis=dict(gridcolor='rgba(128,128,128,0.2)'),
+                yaxis=dict(gridcolor='rgba(128,128,128,0.2)')
+            )
+            st.plotly_chart(fig_corr, width="stretch")
 
 # FOOTER
 st.markdown("---")
